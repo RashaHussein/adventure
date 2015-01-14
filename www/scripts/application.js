@@ -1,7 +1,10 @@
-var map, currentLocation, service, longitude, latitude, directionsDisplay;;
+var map, currentLocation, service, longitude, latitude, directionsDisplay, steps;
 // Declared globaly so it clears previous directions
 directionsDisplay = new google.maps.DirectionsRenderer();
-
+steps = [];
+var dest;
+var currentStep = 0;
+var marker;
 google.maps.event.addDomListener(window, 'load', initialize);
 
 function initialize() {
@@ -18,9 +21,18 @@ function initialize() {
 		});
 	});
 	var btn = document.getElementById('magic-button');
-	google.maps.event.addDomListener(btn, 'click', fetchPlaces);
+	google.maps.event.addDomListener(btn, 'click', doMagic);
 
 }
+
+var doMagic = function () {
+	if(currentStep > 0) {
+		advanceStep();
+	}
+	else {
+		fetchPlaces();
+	}
+};
 
 var fetchPlaces = function() {
 	var request = {
@@ -44,12 +56,59 @@ var fetchPlaces = function() {
 	  };
 	  directionsService.route(request, function(result, status) {
 	    if (status == google.maps.DirectionsStatus.OK) {
-	      directionsDisplay.setDirections(result);
-	      document.getElementById('map').style.height = '90%';
+	      //directionsDisplay.setDirections(result);
+	      console.log(result.routes[0].legs[0]);
+	      steps = result.routes[0].legs[0].steps;
+	      dest =  result.routes[0].legs[0]["end_address"];
+	      console.log(steps);
+
+	      advanceStep();	
+	      changeButton();      
 	    }
 	  });
 	});
 };
+
+
+var advanceStep = function () {
+	var pos = new google.maps.LatLng(steps[currentStep]["end_point"].k, steps[currentStep]["end_point"].D)
+	map.setCenter(pos);
+	map.setZoom(16);
+
+	//Create InfoWindow to display next step in direction list
+	var infoWindow = new google.maps.InfoWindow({
+	    content: '<div class="instr-label"><h4 style="padding:0; margin:0;">Next Step:</h4>'+ steps[currentStep].instructions + '</div>'
+	});
+
+	var lastInfo = new google.maps.InfoWindow({
+		content:'<div class="instr-label"><h4 style="padding:0; margin:0;">You have Arrived to your adventure:</h4>'+dest+'</div>'
+	});
+	//make sure to remove all markers before displaying next step
+	if(marker) marker.setMap(null);
+
+	if(currentStep == steps.length - 1) {
+		var btn = document.getElementById('magic-button');
+		btn.textContent = "Start Another Adventure";
+		currentStep = 0;
+		steps = [];
+		infoWindow = lastInfo;
+	}
+
+	marker = new google.maps.Marker({
+		position: pos,
+		map: map,
+		infoWindow: infoWindow
+	});
+	infoWindow.open(map, marker);
+	currentStep++;
+};
+
+var changeButton = function () {
+	//Remove Start Adventure Button
+	var btn = document.getElementById('magic-button');
+	btn.classList.add('nextStep');
+	btn.textContent = "Display Next Step";
+}
 
 var pickRandom = function(places) {
 	return places[Math.floor(Math.random()*places.length)];

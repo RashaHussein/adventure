@@ -11,7 +11,7 @@ button {
   border-radius: 5px;
 }
 
-#over_map{
+#magic-button{
   position: absolute;
   margin: auto;
   height: 100px;
@@ -52,4 +52,16 @@ button {
   background-image: -o-linear-gradient(top, #3cb0fd, #3498db);
   background-image: linear-gradient(to bottom, #3cb0fd, #3498db);
   text-decoration: none;
+}
+
+.instr-label {
+  width: 150px;
+  height: 100px;
+  font-size: 1.3em;
+}
+
+#magic-button.nextStep {
+  position: absolute;
+  bottom: 0;
+  left: 0; top:inherit; right:0;
 }
