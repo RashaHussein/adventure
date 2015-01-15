@@ -1,36 +1,33 @@
 var map, currentLocation, service, longitude, latitude,
 directionsDisplay = new google.maps.DirectionsRenderer(),
 steps = [],
-dest,
+finalDestination,
 currentStepIndex = 0,
 infoWindow,
+magicButton,
 marker;
 
 google.maps.event.addDomListener(window, 'load', initialize);
 
 function initialize() {
-  // Get User Location and Display Map
   navigator.geolocation.getCurrentPosition(function(position) {
-    console.log(position);
 
     latitude = position.coords.latitude;
     longitude = position.coords.longitude;
     currentLocation = new google.maps.LatLng(latitude, longitude);
     map = new google.maps.Map(document.getElementById('map'), { center: currentLocation, zoom: 17 });
-    google.maps.event.addListener(map, 'tilesloaded', function() {
-      btn.style.display = "block";
+    google.maps.event.addListenerOnce(map, 'idle', function(){
+      magicButton.style.display = "block";
+      magicButton.textContent = " Start Adventure ";
+      infoWindow = new google.maps.InfoWindow({
+        content: '<div class="instr-label">You are here</div>'
+      });
+      placeMarker();
     });
-
-    infoWindow = new google.maps.InfoWindow({
-      content: '<div class="instr-label">You are here</div>'
-    });
-
-    placeMarker();
 
   });
-  var btn = document.getElementById('magic-button');
-  google.maps.event.addDomListener(btn, 'click', doMagic);
-
+  magicButton = document.getElementById('magic-button');
+  google.maps.event.addDomListener(magicButton, 'click', doMagic);
 }
 
 var doMagic = function () {
@@ -61,8 +58,7 @@ var fetchPlaces = function() {
     directionsService.route(request, function(result, status) {
       if (status == google.maps.DirectionsStatus.OK) {
         steps = result.routes[0].legs[0].steps;
-        dest =  result.routes[0].legs[0]["end_address"];
-        console.log(steps, dest);
+        finalDesctination =  result.routes[0].legs[0]["end_address"];
         advanceStep();
         changeButton();
       }
@@ -84,10 +80,9 @@ var advanceStep = function () {
     currentStepIndex++;
   } else {
     infoWindow = new google.maps.InfoWindow({
-      content: '<div class="instr-label"><h4 style="padding:0; margin:0;">You have Arrived!:</h4>' + dest + '</div>'
+      content: '<div class="instr-label"><h4 style="padding:0; margin:0;">You have Arrived!:</h4>' + finalDesctination + '</div>'
     });
-    var btn = document.getElementById('magic-button');
-    btn.textContent = "Start New Adventure";
+    magicButton.textContent = "Start New Adventure";
     currentStepIndex = 0;
     steps = [];
   }
@@ -103,6 +98,7 @@ var placeMarker = function() {
   marker = new google.maps.Marker({
     position: currentLocation,
     map: map,
+    animation: google.maps.Animation.DROP,
     infoWindow: infoWindow
   });
 
@@ -110,9 +106,8 @@ var placeMarker = function() {
 }
 
 var changeButton = function () {
-  var btn = document.getElementById('magic-button');
-  btn.classList.add('nextStep');
-  btn.textContent = " Next Step >> ";
+  magicButton.classList.add('nextStep');
+  magicButton.textContent = " Next Step >> ";
 }
 
 var pickRandom = function(places) {
